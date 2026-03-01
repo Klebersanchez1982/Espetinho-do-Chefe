@@ -11,7 +11,7 @@
     <div id="lista"></div>
     <script>
         function carregar() {
-            fetch('SUA_URLhttps://script.google.com/macros/library/d/1pLSxwbC8IOxGnxx2zWbQlmSjthXqpHZscqtRa1_PFlcFCNXmi13rjE5A/2?acao=buscarPedidos')
+            fetch('https://script.google.com/macros/s/AKfycbyOho6T9pw4MYiUb0pz0iDZTKJn7GyISbXL58JSu-kwFzltwRQFsq9J1vIR9BxFsoCchQ/exec?acao=buscarPedidos')
             .then(res => res.json()).then(data => {
                 let html = '<table><tr><th>Mesa</th><th>Pedido</th></tr>';
                 data.slice(1).reverse().forEach(r => {
@@ -23,4 +23,5 @@
         setInterval(carregar, 10000); carregar();
     </script>
 </body>
+
 </html>
