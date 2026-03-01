@@ -4,39 +4,178 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-    <title>Garçom - Lançar</title>
+    <title>Painel do Garçom v4</title>
+    <style>
+        .flex-row { display: flex; gap: 10px; align-items: flex-end; }
+        .categorias { display: flex; gap: 5px; overflow-x: auto; padding: 10px 0; margin-bottom: 10px; border-bottom: 2px solid #d32f2f; }
+        .btn-cat { background: #444; white-space: nowrap; padding: 5px 15px; border-radius: 20px; font-size: 0.8em; cursor: pointer; }
+        .btn-cat.ativo { background: #d32f2f; color: white; }
+        .grid-botoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; max-height: 250px; overflow-y: auto; }
+        .item-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 8px 0; align-items: center; }
+        .btn-excluir { padding: 2px 10px; background: #900; border: none; color: white; cursor: pointer; border-radius: 4px; }
+        
+        /* Estilo para a Seleção de Ponto */
+        .ponto-container { background: #222; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px solid #555; }
+        .ponto-opcoes { display: flex; gap: 10px; margin-top: 5px; }
+        .ponto-btn { flex: 1; padding: 8px; border: 1px solid #777; background: #333; color: #eee; cursor: pointer; font-size: 0.8em; border-radius: 5px; text-align: center; }
+        .ponto-btn.selecionado { background: #ffa500; color: #000; font-weight: bold; border-color: #fff; }
+        
+        #pesquisa { width: 100%; margin-bottom: 5px; }
+    </style>
 </head>
 <body>
     <h2>📝 Novo Pedido</h2>
-    <input type="number" id="mesa" placeholder="Nº da Mesa">
-    <div id="botoes"></div>
+    
+    <div class="flex-row">
+        <div style="flex: 1;"><label>Mesa</label><input type="number" id="mesa" placeholder="00"></div>
+        <div style="flex: 2;"><label>Cliente</label><input type="text" id="clienteNome" placeholder="Nome"></div>
+    </div>
+
+    <div id="areaPonto" class="ponto-container">
+        <strong>🥩 Ponto da Carne:</strong>
+        <div class="ponto-opcoes">
+            <div class="ponto-btn" id="p1" onclick="selecionarPonto('Mal Passada', 'p1')">Mal Passada</div>
+            <div class="ponto-btn selecionado" id="p2" onclick="selecionarPonto('Ao Ponto', 'p2')">Ao Ponto</div>
+            <div class="ponto-btn" id="p3" onclick="selecionarPonto('Bem Passada', 'p3')">Bem Passada</div>
+        </div>
+    </div>
+
+    <input type="text" id="pesquisa" placeholder="🔍 Filtrar itens..." oninput="filtrarPorBusca()">
+
+    <div class="categorias" id="abasCategorias"></div>
+    <div id="gridItens" class="grid-botoes"></div>
+
     <hr>
-    <h4>Itens: <span id="resumo">---</span></h4>
-    <h3>Total: R$ <span id="total">0.00</span></h3>
-    <button onclick="enviar()" style="background:green">ENVIAR PARA COZINHA</button>
+    <h3>Pedido Atual</h3>
+    <div id="listaPedido"></div>
+    <h3>Total: R$ <span id="totalExibicao">0.00</span></h3>
+
+    <button onclick="enviarPedido()" style="background: #2e7d32; width: 100%; font-size: 1.1em; font-weight: bold;">LANÇAR NA PLANILHA</button>
 
     <script>
-        let pedido = []; let total = 0; const api = 'https://script.google.com/macros/s/AKfycbyOho6T9pw4MYiUb0pz0iDZTKJn7GyISbXL58JSu-kwFzltwRQFsq9J1vIR9BxFsoCchQ/exec';
-        fetch(api+'?acao=buscarCardapio').then(res => res.json()).then(data => {
-            data.slice(1).forEach(r => {
-                if(r[2] > 0) {
+        const api = 'https://script.google.com/macros/s/AKfycbyOho6T9pw4MYiUb0pz0iDZTKJn7GyISbXL58JSu-kwFzltwRQFsq9J1vIR9BxFsoCchQ/exec'; // <--- COLOQUE SUA URL AQUI
+        let cardapioRaw = [];
+        let carrinho = {};
+        let totalGeral = 0;
+        let categoriaAtual = 'Todos';
+        let pontoSelecionado = 'Ao Ponto';
+
+        // 1. Carregar Cardápio
+        fetch(api + '?acao=buscarCardapio')
+            .then(res => res.json())
+            .then(data => {
+                cardapioRaw = data.slice(1);
+                gerarAbasCategorias();
+                renderizarBotoes();
+            });
+
+        function selecionarPonto(ponto, id) {
+            pontoSelecionado = ponto;
+            document.querySelectorAll('.ponto-btn').forEach(b => b.classList.remove('selecionado'));
+            document.getElementById(id).classList.add('selecionado');
+        }
+
+        function gerarAbasCategorias() {
+            const cats = ['Todos', ...new Set(cardapioRaw.map(item => item[3] || 'Geral'))];
+            const container = document.getElementById('abasCategorias');
+            container.innerHTML = cats.map(c => 
+                `<button class="btn-cat ${c === 'Todos' ? 'ativo' : ''}" onclick="mudarCategoria('${c}', this)">${c}</button>`
+            ).join('');
+        }
+
+        function mudarCategoria(cat, btn) {
+            categoriaAtual = cat;
+            document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('ativo'));
+            btn.classList.add('ativo');
+            
+            // Esconde área de ponto se não for categoria de espetinhos
+            const areaPonto = document.getElementById('areaPonto');
+            if (cat.toLowerCase().includes('espeto') || cat === 'Todos') {
+                areaPonto.style.display = 'block';
+            } else {
+                areaPonto.style.display = 'none';
+            }
+            renderizarBotoes();
+        }
+
+        function filtrarPorBusca() { renderizarBotoes(); }
+
+        function renderizarBotoes() {
+            const busca = document.getElementById('pesquisa').value.toLowerCase();
+            const container = document.getElementById('gridItens');
+            container.innerHTML = '';
+
+            cardapioRaw.forEach(r => {
+                const nome = r[0];
+                const cat = r[3] || 'Geral';
+                const matchesBusca = nome.toLowerCase().includes(busca);
+                const matchesCat = (categoriaAtual === 'Todos' || cat === categoriaAtual);
+
+                if (matchesBusca && matchesCat && r[2] > 0) {
                     let btn = document.createElement('button');
-                    btn.innerText = r[0];
-                    btn.onclick = () => { pedido.push(r[0]); total += r[1]; atualizar(); };
-                    document.getElementById('botoes').appendChild(btn);
+                    btn.innerText = nome;
+                    btn.onclick = () => clicarNoItem(r);
+                    container.appendChild(btn);
                 }
             });
-        });
-        function atualizar() { 
-            document.getElementById('resumo').innerText = pedido.join(", ");
-            document.getElementById('total').innerText = total.toFixed(2);
         }
-        function enviar() {
-            if(!document.getElementById('mesa').value || pedido.length === 0) return alert("Preencha tudo!");
-            fetch(api, { method: 'POST', body: JSON.stringify({acao:'novoPedido', mesa:document.getElementById('mesa').value, itens:pedido.join(", "), total:total, garcom:'G1'}) })
-            .then(() => { alert("Sucesso!"); location.reload(); });
+
+        function clicarNoItem(item) {
+            const nome = item[0];
+            const preco = item[1];
+            const categoria = (item[3] || '').toLowerCase();
+            
+            // Se for espetinho, inclui o ponto no nome do item no carrinho
+            let nomeFinal = nome;
+            if (categoria.includes('espeto')) {
+                nomeFinal = `${nome} (${pontoSelecionado})`;
+            }
+            
+            adicionarAoCarrinho(nomeFinal, preco);
+        }
+
+        function adicionarAoCarrinho(chave, preco) {
+            if (carrinho[chave]) carrinho[chave].qtd++;
+            else carrinho[chave] = { qtd: 1, preco: preco };
+            atualizarResumo();
+        }
+
+        function removerUm(chave) {
+            if (carrinho[chave].qtd > 1) carrinho[chave].qtd--;
+            else delete carrinho[chave];
+            atualizarResumo();
+        }
+
+        function atualizarResumo() {
+            const lista = document.getElementById('listaPedido');
+            lista.innerHTML = ''; totalGeral = 0;
+            for (let k in carrinho) {
+                const sub = carrinho[k].qtd * carrinho[k].preco;
+                totalGeral += sub;
+                lista.innerHTML += `<div class="item-row">
+                    <span><strong>${carrinho[k].qtd}x</strong> ${k}</span>
+                    <span>R$ ${sub.toFixed(2)} <button class="btn-excluir" onclick="removerUm('${k}')">X</button></span>
+                </div>`;
+            }
+            document.getElementById('totalExibicao').innerText = totalGeral.toFixed(2);
+        }
+
+        function enviarPedido() {
+            const mesa = document.getElementById('mesa').value;
+            if (!mesa || totalGeral === 0) return alert("Erro: Informe a mesa e adicione itens!");
+            
+            const resumoStr = Object.keys(carrinho).map(k => `${carrinho[k].qtd}x ${k}`).join(", ");
+            const dados = {
+                acao: 'novoPedido',
+                mesa: mesa,
+                itens: resumoStr + " | Cliente: " + document.getElementById('clienteNome').value,
+                total: totalGeral,
+                garcom: "G1"
+            };
+
+            fetch(api, { method: 'POST', body: JSON.stringify(dados) })
+            .then(() => { alert("Pedido enviado com sucesso!"); location.reload(); });
         }
     </script>
 </body>
-
 </html>
