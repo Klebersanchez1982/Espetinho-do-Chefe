@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <title>Caixa</title>
+</head>
+<body>
+    <h2>💰 Fechar Conta</h2>
+    <input type="number" id="nMesa" placeholder="Mesa">
+    <button onclick="buscar()">Ver Conta</button>
+    <div id="box" style="display:none">
+        <p id="itens"></p>
+        <h3>Total: R$ <span id="vTotal"></span></h3>
+        <select id="metodo"><option>Pix</option><option>Cartão</option><option>Dinheiro</option></select>
+        <button onclick="pagar()">PAGAR E LIBERAR</button>
+    </div>
+    <script>
+        const api = 'https://script.google.com/macros/library/d/1pLSxwbC8IOxGnxx2zWbQlmSjthXqpHZscqtRa1_PFlcFCNXmi13rjE5A/2';
+        function buscar() {
+            fetch(api+'?acao=buscarPedidos').then(res => res.json()).then(data => {
+                let m = document.getElementById('nMesa').value;
+                let conta = data.filter(r => r[2] == m && r[5] !== 'Pago');
+                if(conta.length > 0) {
+                    let t = 0; let i = []; conta.forEach(p => { t += p[4]; i.push(p[3]); });
+                    document.getElementById('box').style.display = 'block';
+                    document.getElementById('itens').innerText = i.join(", ");
+                    document.getElementById('vTotal').innerText = t.toFixed(2);
+                } else alert("Nada aberto!");
+            });
+        }
+        function pagar() {
+            fetch(api, { method: 'POST', body: JSON.stringify({acao:'baixarPagamento', mesa:document.getElementById('nMesa').value, metodo:document.getElementById('metodo').value}) })
+            .then(() => { alert("Pago!"); location.reload(); });
+        }
+    </script>
+</body>
+</html>

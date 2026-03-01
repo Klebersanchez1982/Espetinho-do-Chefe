@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <title>Garçom - Lançar</title>
+</head>
+<body>
+    <h2>📝 Novo Pedido</h2>
+    <input type="number" id="mesa" placeholder="Nº da Mesa">
+    <div id="botoes"></div>
+    <hr>
+    <h4>Itens: <span id="resumo">---</span></h4>
+    <h3>Total: R$ <span id="total">0.00</span></h3>
+    <button onclick="enviar()" style="background:green">ENVIAR PARA COZINHA</button>
+
+    <script>
+        let pedido = []; let total = 0; const api = 'https://script.google.com/macros/library/d/1pLSxwbC8IOxGnxx2zWbQlmSjthXqpHZscqtRa1_PFlcFCNXmi13rjE5A/2API_AQUI';
+        fetch(api+'?acao=buscarCardapio').then(res => res.json()).then(data => {
+            data.slice(1).forEach(r => {
+                if(r[2] > 0) {
+                    let btn = document.createElement('button');
+                    btn.innerText = r[0];
+                    btn.onclick = () => { pedido.push(r[0]); total += r[1]; atualizar(); };
+                    document.getElementById('botoes').appendChild(btn);
+                }
+            });
+        });
+        function atualizar() { 
+            document.getElementById('resumo').innerText = pedido.join(", ");
+            document.getElementById('total').innerText = total.toFixed(2);
+        }
+        function enviar() {
+            if(!document.getElementById('mesa').value || pedido.length === 0) return alert("Preencha tudo!");
+            fetch(api, { method: 'POST', body: JSON.stringify({acao:'novoPedido', mesa:document.getElementById('mesa').value, itens:pedido.join(", "), total:total, garcom:'G1'}) })
+            .then(() => { alert("Sucesso!"); location.reload(); });
+        }
+    </script>
+</body>
+</html>

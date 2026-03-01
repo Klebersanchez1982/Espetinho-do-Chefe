@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <title>Assador</title>
+</head>
+<body>
+    <h2>🔥 Pedidos Pendentes</h2>
+    <div id="lista"></div>
+    <script>
+        function carregar() {
+            fetch('SUA_URLhttps://script.google.com/macros/library/d/1pLSxwbC8IOxGnxx2zWbQlmSjthXqpHZscqtRa1_PFlcFCNXmi13rjE5A/2?acao=buscarPedidos')
+            .then(res => res.json()).then(data => {
+                let html = '<table><tr><th>Mesa</th><th>Pedido</th></tr>';
+                data.slice(1).reverse().forEach(r => {
+                    if(r[5] === "Pendente") html += `<tr><td><b>${r[2]}</b></td><td>${r[3]}</td></tr>`;
+                });
+                document.getElementById('lista').innerHTML = html + '</table>';
+            });
+        }
+        setInterval(carregar, 10000); carregar();
+    </script>
+</body>
+</html>
