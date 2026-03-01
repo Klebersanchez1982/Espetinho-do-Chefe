@@ -16,7 +16,7 @@
     <button onclick="enviar()" style="background:green">ENVIAR PARA COZINHA</button>
 
     <script>
-        let pedido = []; let total = 0; const api = 'https://script.google.com/macros/library/d/1pLSxwbC8IOxGnxx2zWbQlmSjthXqpHZscqtRa1_PFlcFCNXmi13rjE5A/2API_AQUI';
+        let pedido = []; let total = 0; const api = 'https://script.google.com/macros/s/AKfycbyOho6T9pw4MYiUb0pz0iDZTKJn7GyISbXL58JSu-kwFzltwRQFsq9J1vIR9BxFsoCchQ/exec';
         fetch(api+'?acao=buscarCardapio').then(res => res.json()).then(data => {
             data.slice(1).forEach(r => {
                 if(r[2] > 0) {
@@ -38,4 +38,5 @@
         }
     </script>
 </body>
+
 </html>
