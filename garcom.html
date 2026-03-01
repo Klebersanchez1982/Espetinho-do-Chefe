@@ -4,177 +4,263 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-    <title>Painel do Garçom v4</title>
+    <title>Painel do Garçom Pro</title>
     <style>
-        .flex-row { display: flex; gap: 10px; align-items: flex-end; }
-        .categorias { display: flex; gap: 5px; overflow-x: auto; padding: 10px 0; margin-bottom: 10px; border-bottom: 2px solid #d32f2f; }
-        .btn-cat { background: #444; white-space: nowrap; padding: 5px 15px; border-radius: 20px; font-size: 0.8em; cursor: pointer; }
-        .btn-cat.ativo { background: #d32f2f; color: white; }
-        .grid-botoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; max-height: 250px; overflow-y: auto; }
-        .item-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 8px 0; align-items: center; }
-        .btn-excluir { padding: 2px 10px; background: #900; border: none; color: white; cursor: pointer; border-radius: 4px; }
-        
-        /* Estilo para a Seleção de Ponto */
-        .ponto-container { background: #222; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px solid #555; }
-        .ponto-opcoes { display: flex; gap: 10px; margin-top: 5px; }
-        .ponto-btn { flex: 1; padding: 8px; border: 1px solid #777; background: #333; color: #eee; cursor: pointer; font-size: 0.8em; border-radius: 5px; text-align: center; }
-        .ponto-btn.selecionado { background: #ffa500; color: #000; font-weight: bold; border-color: #fff; }
-        
-        #pesquisa { width: 100%; margin-bottom: 5px; }
+        body { font-family: Arial, sans-serif; padding: 12px; margin: 0; }
+        .mesa-cliente { margin-bottom: 20px; }
+        .mesa-cliente label { display: block; margin-bottom: 6px; font-weight: bold; }
+        .mesa-cliente input { 
+            width: 100%; 
+            padding: 12px; 
+            font-size: 1.1em; 
+            box-sizing: border-box; 
+            margin-bottom: 12px;
+        }
+        #mesa { 
+            font-size: 1.4em; 
+            text-align: center; 
+            max-width: 120px; 
+            margin: 0 auto 8px auto; 
+            display: block;
+        }
+        #clienteNome { font-size: 1.1em; }
+
+        .grid-botoes { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+            gap: 10px; 
+            margin: 15px 0; 
+            max-height: 38vh; 
+            overflow-y: auto; 
+            padding: 10px; 
+            border: 1px solid #444; 
+            touch-action: pan-y;
+        }
+        .grid-botoes button { 
+            padding: 14px; 
+            font-size: 1em; 
+            height: 80px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            word-break: break-word; 
+        }
+        .item-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #444; 
+            padding: 10px 0; 
+            font-size: 1em;
+        }
+        .btn-excluir, .btn-qtd { 
+            padding: 6px 12px; 
+            margin: 0 4px; 
+            font-size: 1em; 
+            border-radius: 6px;
+        }
+        .btn-qtd { background: #2196f3; }
+        #pesquisa { 
+            width: 100%; 
+            padding: 12px; 
+            font-size: 1.1em; 
+            margin: 10px 0 15px 0;
+        }
+        #observacao { 
+            width: 100%; 
+            padding: 12px; 
+            font-size: 1em; 
+            margin: 10px 0 20px 0;
+            min-height: 80px;
+        }
+        button[onclick="confirmarEnvio()"] { 
+            background: #2e7d32; 
+            width: 100%; 
+            font-size: 1.4em; 
+            padding: 16px; 
+            margin-top: 20px;
+        }
+        /* Cores por categoria */
+        .categoria-carne   { background: #ffccbc; }
+        .categoria-bebida  { background: #bbdefb; }
+        .categoria-petisco { background: #c8e6c9; }
+        .categoria-outra   { background: #f0f0f0; }
     </style>
 </head>
 <body>
+
     <h2>📝 Novo Pedido</h2>
-    
-    <div class="flex-row">
-        <div style="flex: 1;"><label>Mesa</label><input type="number" id="mesa" placeholder="00"></div>
-        <div style="flex: 2;"><label>Cliente</label><input type="text" id="clienteNome" placeholder="Nome"></div>
+
+    <div class="mesa-cliente">
+        <label>Nº da Mesa</label>
+        <input type="number" id="mesa" placeholder="00" inputmode="numeric">
+
+        <label>Nome do Cliente</label>
+        <input type="text" id="clienteNome" placeholder="Ex: João Silva">
     </div>
 
-    <div id="areaPonto" class="ponto-container">
-        <strong>🥩 Ponto da Carne:</strong>
-        <div class="ponto-opcoes">
-            <div class="ponto-btn" id="p1" onclick="selecionarPonto('Mal Passada', 'p1')">Mal Passada</div>
-            <div class="ponto-btn selecionado" id="p2" onclick="selecionarPonto('Ao Ponto', 'p2')">Ao Ponto</div>
-            <div class="ponto-btn" id="p3" onclick="selecionarPonto('Bem Passada', 'p3')">Bem Passada</div>
-        </div>
-    </div>
+    <label>🔍 Pesquisar Item</label>
+    <input type="text" id="pesquisa" placeholder="Digite para filtrar..." oninput="debounceFiltrarItens()">
 
-    <input type="text" id="pesquisa" placeholder="🔍 Filtrar itens..." oninput="filtrarPorBusca()">
-
-    <div class="categorias" id="abasCategorias"></div>
     <div id="gridItens" class="grid-botoes"></div>
 
-    <hr>
-    <h3>Pedido Atual</h3>
-    <div id="listaPedido"></div>
-    <h3>Total: R$ <span id="totalExibicao">0.00</span></h3>
+    <div id="pontoSelecao" style="margin: 15px 0;">
+        <label>Ponto da Carne (Opcional):</label>
+        <select id="ponto">
+            <option value="">Padrão</option>
+            <option value="(Mal Passada)">(Mal Passada)</option>
+            <option value="(Ao Ponto)">(Ao Ponto)</option>
+            <option value="(Bem Passada)">(Bem Passada)</option>
+        </select>
+    </div>
 
-    <button onclick="enviarPedido()" style="background: #2e7d32; width: 100%; font-size: 1.1em; font-weight: bold;">LANÇAR NA PLANILHA</button>
+    <label>Observação Geral (Opcional):</label>
+    <textarea id="observacao" placeholder="Ex: Sem cebola, bem passado, separado..."></textarea>
+
+    <hr>
+    <h3>Resumo do Pedido</h3>
+    <div id="listaPedido"></div>
+    <h3 style="margin-top: 20px;">Total: R$ <span id="totalExibicao">0.00</span></h3>
+
+    <button onclick="confirmarEnvio()">ENVIAR PARA COZINHA</button>
 
     <script>
-        const api = 'https://script.google.com/macros/s/AKfycbyOho6T9pw4MYiUb0pz0iDZTKJn7GyISbXL58JSu-kwFzltwRQFsq9J1vIR9BxFsoCchQ/exec'; // <--- COLOQUE SUA URL AQUI
+        const api = 'https://script.google.com/macros/s/AKfycbyOho6T9pw4MYiUb0pz0iDZTKJn7GyISbXL58JSu-kwFzltwRQFsq9J1vIR9BxFsoCchQ/exec';
         let cardapioRaw = [];
         let carrinho = {};
         let totalGeral = 0;
-        let categoriaAtual = 'Todos';
-        let pontoSelecionado = 'Ao Ponto';
+        let debounceTimeout;
 
-        // 1. Carregar Cardápio
-        fetch(api + '?acao=buscarCardapio')
-            .then(res => res.json())
-            .then(data => {
-                cardapioRaw = data.slice(1);
-                gerarAbasCategorias();
-                renderizarBotoes();
-            });
+        window.onload = () => {
+            const ultimaMesa = localStorage.getItem('ultimaMesa');
+            if (ultimaMesa) document.getElementById('mesa').value = ultimaMesa;
+            carregarCardapio();
+        };
 
-        function selecionarPonto(ponto, id) {
-            pontoSelecionado = ponto;
-            document.querySelectorAll('.ponto-btn').forEach(b => b.classList.remove('selecionado'));
-            document.getElementById(id).classList.add('selecionado');
+        function carregarCardapio() {
+            fetch(api + '?acao=buscarCardapio')
+                .then(res => res.json())
+                .then(data => {
+                    cardapioRaw = data.slice(1).map(row => [row[0], row[1], row[2], row[3] || 'outra']);
+                    renderizarBotoes(cardapioRaw);
+                })
+                .catch(err => alert('Erro ao carregar cardápio: ' + err.message));
         }
 
-        function gerarAbasCategorias() {
-            const cats = ['Todos', ...new Set(cardapioRaw.map(item => item[3] || 'Geral'))];
-            const container = document.getElementById('abasCategorias');
-            container.innerHTML = cats.map(c => 
-                `<button class="btn-cat ${c === 'Todos' ? 'ativo' : ''}" onclick="mudarCategoria('${c}', this)">${c}</button>`
-            ).join('');
-        }
-
-        function mudarCategoria(cat, btn) {
-            categoriaAtual = cat;
-            document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('ativo'));
-            btn.classList.add('ativo');
-            
-            // Esconde área de ponto se não for categoria de espetinhos
-            const areaPonto = document.getElementById('areaPonto');
-            if (cat.toLowerCase().includes('espeto') || cat === 'Todos') {
-                areaPonto.style.display = 'block';
-            } else {
-                areaPonto.style.display = 'none';
-            }
-            renderizarBotoes();
-        }
-
-        function filtrarPorBusca() { renderizarBotoes(); }
-
-        function renderizarBotoes() {
-            const busca = document.getElementById('pesquisa').value.toLowerCase();
+        function renderizarBotoes(itens) {
             const container = document.getElementById('gridItens');
             container.innerHTML = '';
-
-            cardapioRaw.forEach(r => {
-                const nome = r[0];
-                const cat = r[3] || 'Geral';
-                const matchesBusca = nome.toLowerCase().includes(busca);
-                const matchesCat = (categoriaAtual === 'Todos' || cat === categoriaAtual);
-
-                if (matchesBusca && matchesCat && r[2] > 0) {
+            itens.forEach(r => {
+                if (r[2] > 0) {
                     let btn = document.createElement('button');
-                    btn.innerText = nome;
-                    btn.onclick = () => clicarNoItem(r);
+                    btn.innerHTML = `${r[0]}<br><small>R$ ${Number(r[1]).toFixed(2)}</small>`;
+                    btn.onclick = () => adicionarAoCarrinho(r[0], r[1], r[3]);
+                    btn.classList.add(`categoria-${r[3].toLowerCase()}`);
                     container.appendChild(btn);
                 }
             });
         }
 
-        function clicarNoItem(item) {
-            const nome = item[0];
-            const preco = item[1];
-            const categoria = (item[3] || '').toLowerCase();
+        function filtrarItens() {
+            const busca = document.getElementById('pesquisa').value.toLowerCase().trim();
+            const filtrados = cardapioRaw.filter(item => item[0].toLowerCase().includes(busca));
+            renderizarBotoes(filtrados);
+        }
+
+        function debounceFiltrarItens() {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(filtrarItens, 300);
+        }
+
+        function adicionarAoCarrinho(nome, preco, categoria) {
+            const ponto = document.getElementById('ponto').value;
+            const chave = nome + (ponto ? " " + ponto : "");
             
-            // Se for espetinho, inclui o ponto no nome do item no carrinho
-            let nomeFinal = nome;
-            if (categoria.includes('espeto')) {
-                nomeFinal = `${nome} (${pontoSelecionado})`;
+            if (carrinho[chave]) {
+                carrinho[chave].qtd++;
+            } else {
+                carrinho[chave] = { qtd: 1, preco: Number(preco), categoria };
             }
-            
-            adicionarAoCarrinho(nomeFinal, preco);
-        }
-
-        function adicionarAoCarrinho(chave, preco) {
-            if (carrinho[chave]) carrinho[chave].qtd++;
-            else carrinho[chave] = { qtd: 1, preco: preco };
             atualizarResumo();
         }
 
-        function removerUm(chave) {
-            if (carrinho[chave].qtd > 1) carrinho[chave].qtd--;
-            else delete carrinho[chave];
-            atualizarResumo();
+        function alterarQuantidade(chave, delta) {
+            if (carrinho[chave]) {
+                carrinho[chave].qtd = Math.max(0, carrinho[chave].qtd + delta);
+                if (carrinho[chave].qtd === 0) delete carrinho[chave];
+                atualizarResumo();
+            }
         }
 
         function atualizarResumo() {
             const lista = document.getElementById('listaPedido');
-            lista.innerHTML = ''; totalGeral = 0;
-            for (let k in carrinho) {
-                const sub = carrinho[k].qtd * carrinho[k].preco;
-                totalGeral += sub;
-                lista.innerHTML += `<div class="item-row">
-                    <span><strong>${carrinho[k].qtd}x</strong> ${k}</span>
-                    <span>R$ ${sub.toFixed(2)} <button class="btn-excluir" onclick="removerUm('${k}')">X</button></span>
-                </div>`;
+            lista.innerHTML = '';
+            totalGeral = 0;
+
+            for (let item in carrinho) {
+                const subtotal = carrinho[item].qtd * carrinho[item].preco;
+                totalGeral += subtotal;
+
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `
+                    <span><strong>${carrinho[item].qtd}x</strong> ${item}</span>
+                    <span>
+                        R$ ${subtotal.toFixed(2)}
+                        <button class="btn-qtd" onclick="alterarQuantidade('${item.replace(/'/g, "\\'")}', -1)">-</button>
+                        <button class="btn-qtd" onclick="alterarQuantidade('${item.replace(/'/g, "\\'")}', 1)">+</button>
+                        <button class="btn-excluir" onclick="delete carrinho['${item.replace(/'/g, "\\'")}']; atualizarResumo();">X</button>
+                    </span>`;
+                lista.appendChild(div);
             }
             document.getElementById('totalExibicao').innerText = totalGeral.toFixed(2);
         }
 
+        function confirmarEnvio() {
+            if (confirm('Confirmar envio do pedido para a cozinha?')) {
+                enviarPedido();
+            }
+        }
+
         function enviarPedido() {
-            const mesa = document.getElementById('mesa').value;
-            if (!mesa || totalGeral === 0) return alert("Erro: Informe a mesa e adicione itens!");
+            const mesa = document.getElementById('mesa').value.trim();
+            const cliente = document.getElementById('clienteNome').value.trim();
+            const observacao = document.getElementById('observacao').value.trim();
             
+            if (!mesa || Object.keys(carrinho).length === 0) {
+                return alert("Informe a mesa e adicione pelo menos um item!");
+            }
+
+            localStorage.setItem('ultimaMesa', mesa);
+
             const resumoStr = Object.keys(carrinho).map(k => `${carrinho[k].qtd}x ${k}`).join(", ");
+            const horario = new Date().toLocaleString('pt-BR');
+
             const dados = {
                 acao: 'novoPedido',
                 mesa: mesa,
-                itens: resumoStr + " | Cliente: " + document.getElementById('clienteNome').value,
+                itens: resumoStr + " | Cliente: " + (cliente || "—") + (observacao ? " | Obs: " + observacao : "") + " | Horário: " + horario,
                 total: totalGeral,
                 garcom: "G1"
             };
 
             fetch(api, { method: 'POST', body: JSON.stringify(dados) })
-            .then(() => { alert("Pedido enviado com sucesso!"); location.reload(); });
+                .then(res => {
+                    if (!res.ok) throw new Error("Erro na resposta do servidor");
+                    return res.text();
+                })
+                .then(() => {
+                    alert("Pedido enviado com sucesso!");
+                    carrinho = {};
+                    document.getElementById('clienteNome').value = '';
+                    document.getElementById('observacao').value = '';
+                    document.getElementById('pesquisa').value = '';
+                    document.getElementById('ponto').value = '';
+                    atualizarResumo();
+                    filtrarItens();
+                })
+                .catch(err => alert("Falha ao enviar: " + err.message));
         }
     </script>
 </body>
