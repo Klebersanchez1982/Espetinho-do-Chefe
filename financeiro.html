@@ -10,11 +10,12 @@
     <h1>📈 Vendas Totais</h1>
     <div id="res"></div>
     <script>
-        fetch('https://script.google.com/macros/library/d/1pLSxwbC8IOxGnxx2zWbQlmSjthXqpHZscqtRa1_PFlcFCNXmi13rjE5A/2').then(res => res.json()).then(data => {
+        fetch('https://script.google.com/macros/s/AKfycbyOho6T9pw4MYiUb0pz0iDZTKJn7GyISbXL58JSu-kwFzltwRQFsq9J1vIR9BxFsoCchQ/exec').then(res => res.json()).then(data => {
             let total = 0;
             data.slice(1).forEach(r => { if(r[5] === "Pago") total += r[4]; });
             document.getElementById('res').innerHTML = `<h2>R$ ${total.toFixed(2)}</h2>`;
         });
     </script>
 </body>
+
 </html>
